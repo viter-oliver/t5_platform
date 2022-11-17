@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "../../glfw"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"choose_config.h": "c",
+			"glfw3.h": "c",
+			"soil.h": "c",
+			"cctype": "c",
+			"locale": "c",
+			"internal.h": "c",
+			"egl_platform.h": "c",
+			"egl_context.h": "c"
+		},
+		"window.zoomLevel": 1
+	}
+}

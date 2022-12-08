@@ -18,8 +18,9 @@ namespace msg_utility{
     using msg_handle=std::function<bool(u8*,u32)>;
     using batch_cmd_handle=std::function<bool(u8*,u32)>;
     using dic_msg_handle=std::map<u16,msg_handle>;
+    void print_buff(u8* pcmd,u16 len);
     const int cmd_length=256;
-    const int que_length=512;
+    const int que_length=0x400;
     class msg_host {
         dic_msg_handle _dic_msg_handle;
         batch_cmd_handle _batch_cmd_handle;

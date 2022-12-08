@@ -24,9 +24,7 @@
 //    distribution.
 //
 //========================================================================
-
 #include "internal.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -394,7 +392,7 @@ GLFWbool _glfwInitEGL(void)
                             _glfw_dlsym(_glfw.egl.handle, "eglQueryString");
     _glfw.egl.GetProcAddress = (PFN_eglGetProcAddress)
                                _glfw_dlsym(_glfw.egl.handle, "eglGetProcAddress");
-
+    
     if (!_glfw.egl.GetConfigAttrib ||
             !_glfw.egl.GetConfigs ||
             !_glfw.egl.GetDisplay ||
@@ -450,7 +448,6 @@ GLFWbool _glfwInitEGL(void)
         extensionSupportedEGL("EGL_KHR_get_all_proc_addresses");
     _glfw.egl.KHR_context_flush_control =
         extensionSupportedEGL("EGL_KHR_context_flush_control");
-
     return GLFW_TRUE;
 }
 

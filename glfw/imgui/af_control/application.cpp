@@ -88,7 +88,7 @@ namespace auto_future
 #if __APPLE__
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-		if (!_screen_width || !_screen_height)
+		//if (!_screen_width || !_screen_height)
 		{
 			//GLFWmonitor*  pmornitor = glfwGetPrimaryMonitor();
 			//const GLFWvidmode * mode = glfwGetVideoMode(pmornitor);
@@ -166,7 +166,7 @@ namespace auto_future
 			ImGui::SetNextWindowSize(ImVec2(_win_width, _win_height), ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowPos(ImVec2(_wposx, _wposy));
 			if(dcnt==0){
-				printf("win x=%f,y=%f, w=%f,h=%f\n",_wposx, _wposy,_win_width,_win_height);
+				//printf("win x=%f,y=%f, w=%f,h=%f\n",_wposx, _wposy,_win_width,_win_height);
 			} 
 			ImGui::SetNextWindowBgAlpha(1.f);
 			static bool show_app = true;
@@ -191,7 +191,7 @@ namespace auto_future
 			glfwGetFramebufferSize(_window, &display_w, &display_h);
 			
 			if(dcnt==0){
-				printf("display w=%d,h=%d\n",display_w,display_h);
+				//printf("display w=%d,h=%d\n",display_w,display_h);
 			} 
 			
 			

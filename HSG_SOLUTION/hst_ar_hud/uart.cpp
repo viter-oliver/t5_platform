@@ -13,33 +13,41 @@ int setport(int fd, int baud, int databits, int stopbits, int parity)
 
     switch(baud)
     {
-        case 300:
-            baudrate=B300;
+#define BD_SET(x) \
+        case x:\
+            baudrate=B##x;\
             break;
-        case 600:
-            baudrate=B600;
-            break;
-        case 1200:
-            baudrate=B1200;
-            break;
-        case 2400:
-            baudrate=B2400;
-            break;
-        case 4800:
-            baudrate=B4800;
-            break;
-        case 9600:
-            baudrate=B9600;
-            break;
-        case 19200:
-            baudrate=B19200;
-            break;
-        case 38400:
-            baudrate=B38400;
-            break;
-        case 115200:
-            baudrate=B115200;
-            break;
+        BD_SET(0)
+        BD_SET(50)
+        BD_SET(75)
+        BD_SET(110)
+        BD_SET(134)
+        BD_SET(150)
+        BD_SET(200)
+        BD_SET(300)
+        BD_SET(600)
+        BD_SET(1200)
+        BD_SET(1800)
+        BD_SET(2400)
+        BD_SET(4800)
+        BD_SET(9600)
+        BD_SET(19200)
+        BD_SET(38400)
+        BD_SET(57600)
+        BD_SET(115200)
+        BD_SET(230400)
+        BD_SET(460800)
+        BD_SET(500000)
+        BD_SET(576000)
+        BD_SET(921600)
+        BD_SET(1000000)
+        BD_SET(1152000)
+        BD_SET(1500000)
+        BD_SET(2000000)
+        BD_SET(2500000)
+        BD_SET(3000000)
+        BD_SET(3500000)
+        BD_SET(4000000)
         default :
             baudrate=B9600;
             break;

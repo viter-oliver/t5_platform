@@ -38,6 +38,9 @@ void init_var_set_fifo() {
   } else {
     ret = 1;
   }
+  for(int ix=0;ix<queque_len;++ix){
+    buff_queue[ix][0]='\0';
+  }
   if (ret != -1) {
     thread th_fifo([&]() {
       fd_fifo = open(fifo_path, O_RDONLY | O_CLOEXEC);
@@ -51,7 +54,7 @@ void init_var_set_fifo() {
         int n = read(fd_fifo, buff_queue[_front_id], FF_BUFF_LEN);
         if (n > 0) {
           buff_queue[_front_id][n - 1] = '\0';
-          // printf("recieve cmd:%s\n",buff_queue[_front_id]);
+          printf("recieve cmd:%s\n",buff_queue[_front_id]);
           unsigned int front_next_id = _front_id + 1;
           front_next_id %= queque_len;
           _front_id = front_next_id;
@@ -85,7 +88,8 @@ int cmd_update() {
       };
       for (uit cur_id = next_id(_rear_id); cur_id != _rear_id;
            cur_id = next_id(cur_id)) {
-        printf("%s\n", buff_queue[cur_id]);
+        if(strlen(buff_queue[cur_id])>0)
+          printf("%s\n", buff_queue[cur_id]);
       }
     } else {
       auto eq_pos = str_buff.find_last_of('=');
@@ -97,12 +101,12 @@ int cmd_update() {
           if (icmd->second(const_cast<char *>(str_value.c_str()))) {
             refresh_count++;
           }
+        } else {
+          if(general_handle){
+            general_handle(cur_buff);
+          }
         }
-      } else {
-				if(general_handle){
-					general_handle(cur_buff);
-				}
-      }
+      } 
     }
   }
   return refresh_count;

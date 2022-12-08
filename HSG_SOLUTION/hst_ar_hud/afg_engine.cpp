@@ -13,10 +13,11 @@ using namespace msg_utility;
 msg_host g_msg_host;
 afg_engine::afg_engine(int argc, char **argv)
 :application(argc,argv){
-    _screen_width = 1024;
-	_screen_height = 768;
-	_win_width = 1024;
-	_win_height = 768;
+    _screen_width = 1280;
+	_screen_height = 800;
+    
+	_win_width = 1280;
+	_win_height = 800;
 
 	_wposx = 0.f;
 	_wposy = 0.f;
@@ -29,7 +30,11 @@ void afg_engine::resLoaded()
     reg_debug();
     register_msg_host(g_msg_host);
 
-    auto is_valid=[](u16 cmd_tag)->bool{
+    auto is_valid=[](u8* pcmd)->bool{
+        u8 v0=pcmd[0];
+        pcmd[0]=pcmd[1];
+        pcmd[1]=v0;
+        u16 cmd_tag = *(u16*) pcmd;
         if(num_in_range(cmd_tag,Vehicle_frame_a1,Vehicle_frame_c)
         || num_in_range(cmd_tag,Vehicle_frame_b0,Vehicle_frame_b7)
         || num_in_range(cmd_tag,Pedestrian_frame_a,Pedestrian_frame_c)
@@ -51,14 +56,52 @@ void afg_engine::resLoaded()
             u8 cmd_value[valid_cmd_len];
             u16 cmd_tag;
         } cmd_head;
-        int uart_fd=openport("/dev/tty0");
+        struct{
+            u8 back_value[valid_cmd_len];
+            u8 back_len={0};//<valid_cmd_len;
+        }cmd_back;
+        int uart_fd=openport("/dev/ttyS3");
         if(uart_fd>0){
             setport(uart_fd,57600,8,1,'n');
             printf("enter loop of receive uart message!\n");
             while (true){
                 wait_fd_read_eable(uart_fd);
                 int n=read(uart_fd,read_buff,read_buff_len);
-                printf("got %d bytes\n",n);
+                //printf("got %d bytes\n",n);
+                #if 1
+                auto st_len=valid_cmd_len-cmd_back.back_len;
+                if(n>=st_len){
+                    memcpy(cmd_back.back_value+cmd_back.back_len,read_buff,st_len);
+                    cmd_back.back_len=valid_cmd_len;
+                } else {
+                    memcpy(cmd_back.back_value+cmd_back.back_len,read_buff,n);
+                    cmd_back.back_len+=n;
+                    //printf("~~~n=%d st_len=%d\n",n,st_len);
+                    continue;
+                }
+                if(cmd_back.back_len==valid_cmd_len){
+                    if(is_valid(cmd_back.back_value)){
+                        g_msg_host.pick_valid_data(cmd_back.back_value,valid_cmd_len);
+                    } else {
+                        //print_buff(cmd_back.back_value,valid_cmd_len);
+                    }
+                }
+                
+                u8* pcmd=read_buff+st_len;
+                auto rm_len=n-st_len;
+                
+                u8* pcmd_end=pcmd+rm_len;
+                while(pcmd_end-pcmd>=valid_cmd_len){
+                     if(is_valid(pcmd)){
+                        g_msg_host.pick_valid_data(pcmd,valid_cmd_len);
+                    } else {
+                        //print_buff(pcmd,valid_cmd_len);
+                    }
+                    pcmd+=valid_cmd_len;
+                }              
+                cmd_back.back_len=pcmd_end-pcmd;
+                memcpy(cmd_back.back_value, pcmd,cmd_back.back_len);
+                #else
                 if(n==0)
                     continue;
                 auto nid=front_id+n;
@@ -72,6 +115,7 @@ void afg_engine::resLoaded()
                     memcpy(param_buff,read_buff+remain_len,leave_len);
                     front_id=leave_len;
                 }
+
                 for (; rear_id!=front_id;) {
                     static bool picked_valid_data=false;
                     static u8 valid_data_idx=2;
@@ -87,7 +131,7 @@ void afg_engine::resLoaded()
                         }
                     } else {
                         cmd_head.cmd_value[0]=cur_data;
-                        cmd_head.cmd_value[1]=param_buff[nid];
+                        cmd_head.cmd_value[1]=param_buff[n_id];
                         if(is_valid(cmd_head.cmd_tag)){
                             picked_valid_data=true;
                             n_id= next_id(n_id,param_buff_len);
@@ -95,9 +139,10 @@ void afg_engine::resLoaded()
                     }
                     rear_id= n_id;
                 }
+                #endif
             }
         } else {
-            printf("fail to open serial port:/dev/tty0\n");
+            printf("fail to open serial port:/dev/ttyS3\n");
         }
     });
     thd_uart_com.detach();

@@ -673,7 +673,7 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
     #else
     window->context.egl.surface =eglCreateWindowSurface(_glfw.egl.display,
                                  config,
-                                 _GLFW_EGL_NATIVE_WINDOW,
+                                 1,//_GLFW_EGL_NATIVE_WINDOW,index of fb devices,/dev/fb1
                                  NULL);
     #endif
     if (window->context.egl.surface == EGL_NO_SURFACE)

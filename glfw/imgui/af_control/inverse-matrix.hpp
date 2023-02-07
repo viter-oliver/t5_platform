@@ -22,7 +22,7 @@ struct Matrix {
             return false;
         }
         auto vector_multiply = [](std::vector<T>& lv, std::vector<T>& rv)->T {
-            if (lv.size() != rv.size) {
+            if (lv.size() != rv.size()) {
                 return 0;
             }
             T sm = 0;

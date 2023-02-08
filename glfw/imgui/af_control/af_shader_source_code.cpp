@@ -1,30 +1,37 @@
 ﻿#include "af_shader_source_code.h"
 
-const char* single_txt;
-const char* single_txt_vs = R"glsl(
-layout(location = 0)attribute vec3 position;
-layout(location = 1)attribute vec2 textcoord;
-varying vec2 Textcoord;
-uniform mat4 proj;
-uniform mat4 view;
+const char *single_txt;
+const char *single_txt_vs = R"glsl(#version 300 es
+precision mediump float;
+in vec3 position;
+in vec3 normal;
+in vec2 textCoord;
+
+out vec2 TextCoord;
 uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform float voffset;
 void main()
 {
-    gl_Position = proj * view * model * vec4(position, 1.0);
-    Textcoord = textcoord;
+    vec3 cpos = position * length(normal);
+	gl_Position = projection * view * model * vec4(cpos, 1.0);
+	TextCoord = vec2(textCoord.x,textCoord.y + voffset);
 }
 )glsl";
-const char* single_txt_fs = R"glsl(
-varying vec2 Textcoord;
-uniform sampler2D text;
+const char *single_txt_fs = R"glsl(#version 300 es
+precision mediump float;
+in vec2 TextCoord;
+uniform sampler2D tex1;
+out vec4 color;
 void main()
 {
-   gl_FragColor = texture(text, Textcoord);
+	color = texture(tex1, TextCoord);
 }
 )glsl";
 
-const char* color_obj = "color_obj";
-const char* color_obj_vs = R"glsl(
+const char *color_obj = "color_obj";
+const char *color_obj_vs = R"glsl(#version 300 es
 layout(location = 0) attribute vec3 position;
 layout(location = 1) attribute vec3 color;
 layout(location = 2) attribute vec2 texcoord;
@@ -40,7 +47,7 @@ void main()
 	gl_Position = proj * view * model * vec4(position, 1.0);
 }
 )glsl";
-const char* color_obj_fs = R"glsl(
+const char *color_obj_fs = R"glsl(#version 300 es
 varying vec3 Color;
 varying vec2 Texcoord;
 void main()
@@ -49,9 +56,8 @@ void main()
 }
 )glsl";
 
-const char* particles1 = "particles1";
-const char* particles1_vs = R"glsl(
-#version 330 core
+const char *particles1 = "particles1";
+const char *particles1_vs = R"glsl(#version 330 core
 // Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 squareVertices;
 layout(location = 1) in vec4 xyzs; // Position of the center of the particule and size of the square
@@ -84,8 +90,7 @@ void main()
 	particlecolor = color;
 }
 )glsl";
-const char* particles1_fs = R"glsl(
-#version 330 core
+const char *particles1_fs = R"glsl(#version 330 core
 
 // Interpolated values from the vertex shaders
 in vec2 UV;
@@ -102,9 +107,8 @@ void main(){
 	color = texture( myTextureSampler, UV );
 }
 )glsl";
-const char* particles2 = "particles2";
-const char* particles2_vs = R"glsl(
-#version 330 core
+const char *particles2 = "particles2";
+const char *particles2_vs = R"glsl(#version 330 core
 
 // Input vertex data, different for all executions of this shader.
 layout(location = 0) in vec3 squareVertices;
@@ -139,8 +143,7 @@ void main()
 	UV = uvcol[uv_index];
 }
 )glsl";
-const char* particles2_fs = R"glsl(
-#version 330 core
+const char *particles2_fs = R"glsl(#version 330 core
 
 // Interpolated values from the vertex shaders
 in vec2 UV;
@@ -152,14 +155,15 @@ void main(){
 }
 )glsl";
 
-const char* modeling = "modeling";
-const char* modeling_vs=R"glsl(
-attribute vec3 position;
-attribute vec3 normal;
-attribute vec2 textCoord;
-varying vec3 FragPos;
-varying vec2 TextCoord;
-varying vec3 FragNormal;
+const char *modeling = "modeling";
+const char *modeling_vs = R"glsl(#version 300 es
+precision mediump float;
+layout(location=0) in vec3 normal;
+layout(location=1) in vec3 position;
+layout(location=2) in vec2 textCoord;
+out vec3 FragPos;
+out vec2 TextCoord;
+out vec3 FragNormal;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -174,23 +178,20 @@ void main()
 	FragNormal = normalMatrix * normal; //calculate normal
 }
 )glsl";
-const char* modeling_fs=R"glsl(
-varying vec3 FragPos;
-varying vec2 TextCoord;
-varying vec3 FragNormal;
-struct LightAttr
-{
-	vec3 position;
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
+const char *modeling_fs = R"glsl(#version 300 es
+precision mediump float;
+in vec3 FragPos;
+in vec2 TextCoord;
+in vec3 FragNormal;
+out vec4 o_clr;
+uniform vec3 light_position;
+uniform vec3 light_ambient;
+uniform vec3 light_diffuse;
+uniform vec3 light_specular;
+uniform float light_constant;
+uniform float light_linear;
+uniform float light_quadratic;
 
-	float constant;
-	float linear;
-	float quadratic;
-};
-
-uniform LightAttr light;
 uniform vec3 viewPos;
 uniform sampler2D texture_diffuse0;
 //uniform sampler2D texture_diffuse1;
@@ -198,26 +199,189 @@ uniform sampler2D texture_diffuse0;
 uniform sampler2D texture_specular0;
 //uniform sampler2D texture_specular1;
 //uniform sampler2D texture_specular2;
-
 void main()
 {
-	vec3	ambient = light.ambient * vec3(texture(texture_diffuse0, TextCoord));
+	vec3	ambient = light_ambient * vec3(texture(texture_diffuse0, TextCoord));
 
-	vec3	lightDir = normalize(light.position - FragPos);
+	vec3	lightDir = normalize(light_position - FragPos);
 	vec3	normal = normalize(FragNormal);
 	float	diffFactor = max(dot(lightDir, normal), 0.0);
-	vec3	diffuse = diffFactor * light.diffuse * vec3(texture(texture_diffuse0, TextCoord));
+	vec3	diffuse = diffFactor * light_diffuse * vec3(texture(texture_diffuse0, TextCoord));
 	float	specularStrength = 0.5f;
 	vec3	reflectDir = normalize(reflect(-lightDir, normal));
 	vec3	viewDir = normalize(viewPos - FragPos);
 	float	specFactor = pow(max(dot(reflectDir, viewDir), 0.0), 64.0f);
-	vec3	specular = specFactor * light.specular * vec3(texture(texture_specular0, TextCoord));
-	float distance = length(light.position - FragPos);
-	float attenuation = 1.0f / (light.constant 
-			+ light.linear * distance
-			+ light.quadratic * distance * distance);
+	vec3	specular = specFactor * light_specular * vec3(texture(texture_specular0, TextCoord));
+	float distance = length(light_position - FragPos);
+	float attenuation = 1.0f / (light_constant 
+			+ light_linear * distance
+			+ light_quadratic * distance * distance);
 
 	vec3	result = (ambient + diffuse + specular) * attenuation;
-	gl_FragColor	= vec4(result , 1.0f);
+	//vec3 result=vec3(0,0,0);
+	o_clr	= vec4(result , 1.0f);
+}
+)glsl";
+
+const char *modeling_vs_col = R"glsl(#version 300 es
+precision mediump float;
+layout(location=0) in vec3 position;
+layout(location=1) in vec3 normal;
+out vec3 FragPos;
+out vec3 FragNormal;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(position, 1.0);
+	FragPos = vec3(model * vec4(position, 1.0));//special a position for fragment
+	mat3 normalMatrix = mat3(transpose(inverse(model)));
+	FragNormal = normalMatrix * normal; //calculate normal
+}
+)glsl";
+const char *modeling_fs_col = R"glsl(#version 300 es
+precision mediump float;
+in vec3 FragPos;
+in vec3 FragNormal;
+out vec4 o_clr;
+uniform vec3 light_position;
+
+uniform vec3 light_ambient;
+uniform vec3 light_diffuse;
+uniform vec3 light_specular;
+
+uniform vec3 viewPos;
+uniform vec3 col_ambient;
+uniform vec3 col_diffuse;
+uniform vec3 col_specular;
+void main()
+{
+	vec3	ambient = light_ambient * col_ambient;
+
+	vec3	lightDir = normalize(light_position - FragPos);
+	vec3	normal = normalize(FragNormal);
+	float	diffFactor = max(dot(lightDir, normal), 0.0);
+	vec3	diffuse = diffFactor * light_diffuse * col_diffuse;
+	float	specularStrength = 0.5f;
+	vec3	reflectDir = normalize(reflect(-lightDir, normal));
+	vec3	viewDir = normalize(viewPos - FragPos);
+	float	specFactor = pow(max(dot(reflectDir, viewDir), 0.0), 64.0f);
+	vec3	specular = specFactor * light_specular * col_specular;
+	
+	vec3	result = ambient + diffuse + specular;
+	o_clr	= vec4(result , 1.0f);
+}
+)glsl";
+
+const char *modeling_vs_col_d = R"glsl(#version 300 es
+precision highp float;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+out vec3 FragPos;
+out vec3 Normal;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+})glsl";
+const char *modeling_fs_col_d = R"glsl(#version 300 es
+precision highp float;
+in vec3 FragPos;
+in vec3 Normal;
+
+out vec4 o_clr;
+uniform vec3 light_dir;
+uniform vec3 light_position;
+
+uniform vec3 light_ambient;
+uniform vec3 light_diffuse;
+uniform vec3 light_specular;
+
+uniform vec3 viewPos;
+uniform vec3 col_ambient;
+uniform vec3 col_diffuse;
+uniform vec3 col_specular;
+void main()
+{
+	vec3	ambient = light_ambient * col_ambient;
+	vec3	normal = normalize(Normal);
+	vec3	lightDir = normalize(-light_dir);
+	float	diffFactor = max(dot(lightDir, normal), 0.0);
+
+	vec3  lightPointDir = normalize(light_position - FragPos);
+	float pointDiffFactor = max(dot(lightPointDir,normal), 0.0);
+
+	vec3	diffuse = (diffFactor + pointDiffFactor)* light_diffuse * col_diffuse;
+	
+	vec3	viewDir = normalize(viewPos - FragPos);
+	vec3	reflectDir = normalize(reflect(-lightPointDir, normal));
+	float	specFactor = pow(max(dot(reflectDir, viewDir), 0.0), 64.0f);
+	vec3	specular = specFactor * light_specular * col_specular;
+	
+	vec3	result = ambient + diffuse + specular;
+	o_clr	= vec4(result , 1.0f);
+}
+)glsl";
+
+const char *modeling_vs_1_txt = R"glsl(#version 300 es
+precision mediump float;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 txtcoord;
+
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 txtCoord; 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    txtCoord=txtcoord;     
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+})glsl";
+const char *modeling_fs_1_txt = R"glsl(#version 300 es
+precision mediump float;
+in vec3 FragPos;
+in vec3 Normal;
+in vec2 txtCoord;
+
+out vec4 o_clr;
+uniform vec3 light_dir;
+
+uniform vec3 light_ambient;
+uniform vec3 light_diffuse;
+uniform vec3 light_specular;
+
+uniform vec3 viewPos;
+uniform sampler2D texture_diffuse;
+
+void main()
+{
+    vec3    txt_diffuse = vec3(texture(texture_diffuse, txtCoord));
+	vec3	ambient = light_ambient * txt_diffuse;
+	vec3	normal = normalize(Normal);
+	vec3	lightDir = normalize(-light_dir);
+	float	diffFactor = max(dot(lightDir, normal), 0.0);
+	vec3	diffuse = diffFactor * light_diffuse * txt_diffuse;
+
+    vec3	viewDir = normalize(viewPos - FragPos);
+    vec3	reflectDir = normalize(reflect(-lightDir, normal));
+	float	specFactor = pow(max(dot(reflectDir, viewDir), 0.0), 32.0f);
+	vec3	specular = specFactor * light_specular;
+	
+	vec3	result = ambient + diffuse + specular;
+	o_clr	= vec4(result , 1.0f);
 }
 )glsl";

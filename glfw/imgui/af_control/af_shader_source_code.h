@@ -19,3 +19,12 @@ extern const char* particles2_fs;
 extern const char* modeling;
 extern const char* modeling_vs;
 extern const char* modeling_fs;
+
+extern const char* modeling_vs_col;
+extern const char* modeling_fs_col;
+
+extern const char* modeling_vs_col_d;
+extern const char* modeling_fs_col_d;
+
+extern const char* modeling_vs_1_txt;
+extern const char* modeling_fs_1_txt;

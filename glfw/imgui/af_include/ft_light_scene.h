@@ -1,8 +1,6 @@
 #pragma once
 #include "ft_base.h"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+
 namespace auto_future
 {
      class AFG_EXPORT ft_light_scene :
@@ -58,33 +56,38 @@ namespace auto_future
           {
                return _pj_pt._far;
           }
-		  void set_fovy(float fovy)
-		  {
-			  _pj_pt._fovy=fovy;
-		  }
-		  void set_far(float ffar)
-		  {
-			  _pj_pt._far = ffar;
-		  }
-		  void set_near(float fnear)
-		  {
-			  _pj_pt._near=fnear;
-		  }
-		  af_vec3& get_light_dir(){
-			  return _pj_pt._light_direction;
-		  }
-          af_vec3& get_light_position() {
-              return _pj_pt._light_position;
+          void set_fovy(float fovy)
+          {
+               _pj_pt._fovy=fovy;
           }
-		  af_vec3& get_light_ambient(){
-			  return _pj_pt._light_ambient_clr;
-		  }
-		  af_vec3& get_light_diffuse(){
-			  return _pj_pt._light_diffuse_clr;
-		  }
-		  af_vec3& get_light_specular(){
-			  return _pj_pt._light_specular_clr;
-		  }
+          void set_far(float ffar)
+          {
+               _pj_pt._far = ffar;
+          }
+          void set_near(float fnear)
+          {
+               _pj_pt._near=fnear;
+          }
+          af_vec3& get_light_dir(){
+               auto plight_dir=&_pj_pt._light_direction;
+               return *plight_dir;
+          }
+          af_vec3& get_light_position() {
+               auto plight_pos=&_pj_pt._light_position;
+               return *plight_pos;
+          }
+          af_vec3& get_light_ambient(){
+               auto plight_amb=&_pj_pt._light_ambient_clr;
+               return *plight_amb;
+          }
+          af_vec3& get_light_diffuse(){
+               auto plight_dif=&_pj_pt._light_diffuse_clr;
+               return *plight_dif;
+          }
+          af_vec3& get_light_specular(){
+               auto plight_spec=&_pj_pt._light_specular_clr;
+               return *plight_spec;
+          }
      };
      REGISTER_CONTROL( ft_light_scene )
 }

@@ -1,3 +1,6 @@
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "ft_light_scene.h"
 #include "common_functions.h"
 #include "af_primitive_object.h"

@@ -64,7 +64,7 @@ namespace auto_future
 	int get_resolution(int* width,int* height)
 	{
 		struct fb_var_screeninfo sc_info;
-		int fd=open("/dev/fb0",O_RDWR);
+		int fd=open("/dev/fb1",O_RDWR);
 		if(!fd)
 			return 0;
 		ioctl(fd,FBIOGET_VSCREENINFO,&sc_info);

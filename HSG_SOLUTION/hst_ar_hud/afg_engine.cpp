@@ -9,17 +9,20 @@
 #include "register_msg_host.h"
 #include "debug_var_set.h"
 extern void refresh_hsg();
+using namespace auto_future;
+using namespace std;
 using namespace msg_utility;
 msg_host g_msg_host;
+af_timer g_timer;
 afg_engine::afg_engine(int argc, char **argv)
 :application(argc,argv){
-    _screen_width = 1280;
-	_screen_height = 800;
+    _screen_width = 1920;
+	_screen_height = 1080;
     
-	_win_width = 1280;
-	_win_height = 800;
+	_win_width = 1920;
+	_win_height = 720;
 
-	_wposx = 0.f;
+	_wposx = 180.f;
 	_wposy = 0.f;
 }
 void afg_engine::resLoaded()
@@ -151,6 +154,7 @@ void afg_engine::resLoaded()
 void afg_engine::onUpdate()
 {
     g_msg_host.execute_cmd();
+    g_timer.execute();
     fifo_debuger::cmd_update();
 }
 AFGUI_APP(afg_engine)

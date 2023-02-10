@@ -1,6 +1,5 @@
 #pragma once
 #include "af_bind.h"
-#include "easing.h"
 #include<chrono>
 using namespace chrono;
 using prop_value_block = string;

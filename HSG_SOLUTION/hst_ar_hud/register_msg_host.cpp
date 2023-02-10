@@ -10,21 +10,63 @@ car0_show
 #include "af_bind.h"
 #include "afg.h"
 #include "debug_var_set.h"
+#include "af_state_manager.h"
 using namespace msg_utility;
 using namespace auto_future;
 using namespace std;
 extern void refresh_hsg();
 #define HUD_DEBUG
 namespace hud {
-    ft_hud_projector* pprojector;
-    ft_hud_4_time_curve_3d* pleft_lane;
-    ft_hud_4_time_curve_3d* pright_lane;
-    ft_hud_obj_3d* pmain_car;
-    ft_hud_obj_3d* pcar0;
-    ft_hud_obj_3d* pcar1;
-    ft_hud_obj_3d* pcar2;
+    ft_light_scene* pprojector;
+    ft_4_time_curve_3d* pleft_lane;
+    ft_4_time_curve_3d* pright_lane;
+    ft_4_time_wall_3d* pleft_lane_wall;
+    ft_4_time_wall_3d* pright_lane_wall;
+
+    ft_trans* pmain_tar;
+    ft_trans* ptar0;
+    ft_trans* ptar1;
+    ft_trans* ptar2;
+
     float lc0=0.f,lc1=0.f,lc2=0.f,lc3=0.f;
     float rc0=0.f,rc1=0.f,rc2=0.f,rc3=0.f;
+    
+
+    struct adas_tar{
+        static float adas_x,adas_z,adas_y;
+        float tl_x=0.f,tl_z=0.f,tl_y=0.f;
+        ft_trans* phost=nullptr;
+        adas_tar& set_tl_x(float fv){
+            tl_x=fv;
+            auto xvalue=tl_x+adas_x;
+            phost->set_translation_x(xvalue);
+            return *this;
+        }
+        adas_tar& set_tl_y(float fv){
+            tl_y=fv;
+            auto yvalue=tl_y+adas_y;
+            phost->set_translation_y(yvalue);
+            return *this;
+        }
+        adas_tar& set_tl_z(float fv){
+            tl_z=fv;
+            auto zvalue=tl_z+adas_z;
+            phost->set_translation_z(zvalue);
+            return *this;
+        }
+        void recal(){
+            auto xvalue=tl_x+adas_x;
+            phost->set_translation_x(xvalue);
+            auto yvalue=tl_y+adas_y;
+            phost->set_translation_y(yvalue);
+            auto zvalue=tl_z+adas_z;
+            phost->set_translation_z(zvalue);
+        }
+    };
+    float adas_tar::adas_x=0.f;
+    float adas_tar::adas_y=0.f;
+    float adas_tar::adas_z=0.f;
+    adas_tar main_tar,tar0,tar1,tar2;
     void set_fovy(float fovy){
         pprojector->set_fovy(fovy);
     }
@@ -33,27 +75,37 @@ namespace hud {
         pprojector->set_near(fnear);
     }
     void init_controls(){
-        pprojector=(ft_hud_projector*)get_aliase_ui_control("hud_far");
-        pleft_lane=(ft_hud_4_time_curve_3d*) get_aliase_ui_control("left_lane_show");
-        pright_lane=(ft_hud_4_time_curve_3d*) get_aliase_ui_control("right_lane_show");
-        pmain_car=(ft_hud_obj_3d*)get_aliase_ui_control("main_car_show");
-        pcar0=(ft_hud_obj_3d*)get_aliase_ui_control("car0_show");
-        pcar1=(ft_hud_obj_3d*)get_aliase_ui_control("car1_show");
-        pcar2=(ft_hud_obj_3d*)get_aliase_ui_control("car2_show");
+        pprojector=(ft_light_scene*)get_aliase_ui_control("show_hud");
+        pleft_lane=(ft_4_time_curve_3d*) get_aliase_ui_control("show_left_lane");
+        pright_lane=(ft_4_time_curve_3d*) get_aliase_ui_control("show_right_lane");
+        pleft_lane_wall=(ft_4_time_wall_3d*) get_aliase_ui_control("show_left_lane_wall");
+        pright_lane_wall=(ft_4_time_wall_3d*) get_aliase_ui_control("show_right_lane_wall");
+        pmain_tar=(ft_trans*)get_aliase_ui_control("show_main_tar");
+        main_tar.phost=pmain_tar;
+        ptar0=(ft_trans*)get_aliase_ui_control("show_tar0");
+        tar0.phost=ptar0;
+        ptar1=(ft_trans*)get_aliase_ui_control("show_tar1");
+        tar1.phost=ptar1;
+        ptar2=(ft_trans*)get_aliase_ui_control("show_tar2");
+        tar2.phost=ptar2;
 #ifdef HUD_DEBUG
         pleft_lane->set_visible(true);
         pright_lane->set_visible(true);
-        pmain_car->set_visible(true);
-        pcar0->set_visible(true);
-        pcar1->set_visible(true);
-        pcar2->set_visible(true);
+        pleft_lane_wall->set_visible(true);
+        pright_lane_wall->set_visible(true);
+        pmain_tar->set_visible(true);
+        ptar0->set_visible(true);
+        ptar1->set_visible(true);
+        ptar2->set_visible(true);
 #endif
     }
     void calcu_left_lane(){
         pleft_lane->set_coeff(lc0,lc1,lc2,lc3);
+        pleft_lane_wall->set_coeff(lc0,lc1,lc2,lc3);
     }
     void calcu_right_lane(){
         pright_lane->set_coeff(rc0,rc1,rc2,rc3);
+        pright_lane_wall->set_coeff(rc0,rc1,rc2,rc3);
     }
 }
 void reg_debug(){
@@ -73,14 +125,71 @@ void reg_debug(){
                 printf("i alias:%s =%f\n",alias_name.c_str(),ivalue);
                 set_property_aliase_value_T(alias_name,ivalue);
             }
-        } else {
-            
-
-        }
+        } 
         return true;
     });
-    
+    fifo_debuger::attach_var_handle("view_x",[](char* pcmd_buff )->bool{
+        float view_x=atof(pcmd_buff);
+        hud::pprojector->get_view_pos()->x=view_x;
+    });
+    fifo_debuger::attach_var_handle("view_y",[](char* pcmd_buff )->bool{
+        float view_y=atof(pcmd_buff);
+        hud::pprojector->get_view_pos()->y=view_y;
+    });
+    fifo_debuger::attach_var_handle("view_z",[](char* pcmd_buff )->bool{
+        float view_z=atof(pcmd_buff);
+        hud::pprojector->get_view_pos()->z=view_z;
+    });
+    fifo_debuger::attach_var_handle("center_x",[](char* pcmd_buff )->bool{
+        float center_x=atof(pcmd_buff);
+        hud::pprojector->get_center_of_prj()->x=center_x;
+    });
+    fifo_debuger::attach_var_handle("center_y",[](char* pcmd_buff )->bool{
+        float center_y=atof(pcmd_buff);
+        hud::pprojector->get_center_of_prj()->y=center_y;
+    });
+    fifo_debuger::attach_var_handle("center_z",[](char* pcmd_buff )->bool{
+        float center_z=atof(pcmd_buff);
+        hud::pprojector->get_center_of_prj()->z=center_z;
+    });
+    fifo_debuger::attach_var_handle("adas_x",[](char* pcmd_buff )->bool{
+        float adas_x=atof(pcmd_buff);
+        hud::pleft_lane->set_transx(adas_x);
+        hud::pleft_lane_wall->set_transx(adas_x);
+        hud::pright_lane->set_transx(adas_x);
+        hud::pright_lane_wall->set_transx(adas_x); 
+        hud::adas_tar::adas_x=adas_x;
+        hud::main_tar.recal();
+        hud::tar0.recal();
+        hud::tar1.recal();
+        hud::tar2.recal();
+    });
+    fifo_debuger::attach_var_handle("adas_y",[](char* pcmd_buff )->bool{
+        float adas_y=atof(pcmd_buff);
+        hud::pleft_lane->set_transy(adas_y);
+        hud::pleft_lane_wall->set_transy(adas_y);
+        hud::pright_lane->set_transy(adas_y);
+        hud::pright_lane_wall->set_transy(adas_y); 
+        hud::adas_tar::adas_y=adas_y;
+        hud::main_tar.recal();
+        hud::tar0.recal();
+        hud::tar1.recal();
+        hud::tar2.recal();
+    });
+    fifo_debuger::attach_var_handle("adas_z",[](char* pcmd_buff )->bool{
+        float adas_z=atof(pcmd_buff);
+        hud::pleft_lane->set_transz(adas_z);
+        hud::pleft_lane_wall->set_transz(adas_z);
+        hud::pright_lane->set_transz(adas_z);
+        hud::pright_lane_wall->set_transz(adas_z); 
+        hud::adas_tar::adas_z=adas_z;
+        hud::main_tar.recal();
+        hud::tar0.recal();
+        hud::tar1.recal();
+        hud::tar2.recal();
+    });
 }
+
 void register_msg_host(msg_utility::msg_host& mh){
     mh.register_batch_cmd_handle([](u8* pbuff,u32 len)->bool{
         u16* pcmd=(u16*)pbuff;
@@ -106,13 +215,13 @@ void register_msg_host(msg_utility::msg_host& mh){
      
             auto vehicle_id=*pcmd-Vehicle_frame_b0;
             if(vehicle_id==0){
-                hud::pcar0->set_transz(Addition_Vehicle_A_PosX);
-                hud::pcar0->set_transx(Addition_Vehicle_A_PosY);
-                hud::pcar1->set_transz(Addition_Vehicle_B_PosX);
-                hud::pcar1->set_transx(Addition_Vehicle_B_PosY);
+                hud::tar0.set_tl_z(Addition_Vehicle_A_PosX)
+                         .set_tl_x(Addition_Vehicle_A_PosY);
+                hud::tar1.set_tl_z(Addition_Vehicle_B_PosX)
+                         .set_tl_x(Addition_Vehicle_B_PosY);
             } else if(vehicle_id==1){
-                hud::pcar2->set_transz(Addition_Vehicle_A_PosX);
-                hud::pcar2->set_transx(Addition_Vehicle_A_PosY);
+                hud::tar2.set_tl_z(Addition_Vehicle_A_PosX)
+                         .set_tl_x(Addition_Vehicle_A_PosY);
             }
         } else if(num_in_range(*pcmd,Pedestrian_frame_bb,Pedestrian_frame_bd)){
             struct GNU_DEF St_Pedestrian_frame_bx{
@@ -150,7 +259,7 @@ void register_msg_host(msg_utility::msg_host& mh){
         };
         St_Vehicle_frame_a1* pcan=(St_Vehicle_frame_a1*)pbuff;
         float Target_Vehicle_PosX=pcan->Target_Vehicle_PosX*0.0625f;
-        float Target_Vehicle_PosY=pcan->Target_Vehicle_PosY*0.0625f-32.f;//*100 transfer to cm
+        float Target_Vehicle_PosY=pcan->Target_Vehicle_PosY*0.0625f-32.f;
         u16* pcanid=(u16*)pbuff;
         static int dcnt=0;
         if(dcnt==0){
@@ -162,8 +271,8 @@ void register_msg_host(msg_utility::msg_host& mh){
         }
         dcnt++;
         dcnt%=100;
-        hud::pmain_car->set_transz(Target_Vehicle_PosX);
-        hud::pmain_car->set_transx(Target_Vehicle_PosY);
+        hud::main_tar.set_tl_z(Target_Vehicle_PosX)
+                     .set_tl_x(Target_Vehicle_PosY);
         return false;
     });
     mh.register_msg_handle(Vehicle_frame_a2,[&](u8* pbuff,int len){
@@ -181,7 +290,8 @@ void register_msg_host(msg_utility::msg_host& mh){
         St_Vehicle_frame_a2* pcan=(St_Vehicle_frame_a2*)pbuff;
         float Target_Vehicle_Width=pcan->Target_Vehicle_Width*0.05f;
         //printf("main car width=%f\n",Target_Vehicle_Width);
-        hud::pmain_car->set_size(Target_Vehicle_Width,50.f);
+        hud::pmain_tar->set_scale_x(Target_Vehicle_Width)
+                        .set_scale_y(Target_Vehicle_Width);
         return false;
     });
     mh.register_msg_handle(Vehicle_frame_c,[&](u8* pbuff,int len){
@@ -297,4 +407,15 @@ void register_msg_host(msg_utility::msg_host& mh){
         St_AEB_WARNING* pcan=(St_AEB_WARNING*)pbuff;
         return false;
     });
+    reg_trans_handle("lane_changing",[&](int from,int to){
+        if(from==1&&to==2){
+            play_tran_playlist("flash_left_lane_wall",0);
+        }
+    });
+    reg_trans_handle("flash_left_lane_wall",[&](int from,int to){
+        if(from==0&&to==3){
+            play_tran_playlist("lane_changing",0);
+        }
+    });
+    play_tran_playlist("lane_changing",0);
 }

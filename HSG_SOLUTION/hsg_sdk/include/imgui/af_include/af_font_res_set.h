@@ -1,11 +1,11 @@
 #pragma once
 /*
-1ï¿½ï¿½get char encode format of font face
-2ï¿½ï¿½get glyph index by the code of char unit
-3ï¿½ï¿½generate bitmap of glyphs 
+1¡¢get char encode format of font face
+2¡¢get glyph index by the code of char unit
+3¡¢generate bitmap of glyphs 
 */
 #include <GLFW/glfw3.h>
-//#include <GL/glcorearb.h>
+#include <GL/glcorearb.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -32,7 +32,7 @@ namespace auto_future
 	* \memberof _size,_bearing,_advace,x0,y0,x1,y1
 	*
 	* \author Viter
-	* \date Ò»ï¿½ï¿½ 2019
+	* \date Ò»ÔÂ 2019
 	*/
 	struct txt_coordinate
 	{
@@ -49,7 +49,7 @@ namespace auto_future
 	* \brief dictionary,by that you can find the coordinate through the code of char
 	*
 	* \author Viter
-	* \date Ò»ï¿½ï¿½ 2019
+	* \date Ò»ÔÂ 2019
 	*/
 	using dic_glyph_txt = map<wchar_t, txt_coordinate>;
 

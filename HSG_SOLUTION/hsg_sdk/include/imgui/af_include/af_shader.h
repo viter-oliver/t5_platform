@@ -6,12 +6,12 @@
 #include <vector>
 #include <map>
 #include <functional>
-/*#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <glm/gtx/norm.hpp>*/
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/norm.hpp>
 #include <GLFW/glfw3.h>
-//#include <GL/glcorearb.h>
+#include <GL/glcorearb.h>
 #include "fab.h"
 using namespace fab;
 using namespace std;

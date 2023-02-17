@@ -19,54 +19,57 @@ namespace auto_future
 		 }
 		 
 #if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
-		 reg_property_handle(&_pt, 0, [this](void* member_address)
-		 {
-			 if (_ps_prm)
-			 {
-				 ImGui::Text("Attached primitive:%s", _pt._attached_obj);
-				 ImGui::SameLine();
-				 if (ImGui::Button("Delink##primitive"))
-				 {
-					 _ps_prm = nullptr;
-				 }
-			 }
-			 else
-			 {
-				 ImGui::InputText("Attached primitive:", _pt._attached_obj, FILE_NAME_LEN);
-				 if (ImGui::Button("Import"))
-				 {
-					 auto itxt = g_primitive_list.find(_pt._attached_obj);
-					 if (itxt != g_primitive_list.end())
-					 {
-						 _ps_prm = itxt->second;
-					 }
-				 }
-			 }
-		 });
-		 reg_property_handle(&_pt, 1, [this](void* member_address)
-		 {
-			 if (_ps_txt)
-			 {
-				 ImGui::Text("Attached image:%s", _pt._attached_txt);
-				 ImGui::SameLine();
-				 if (ImGui::Button("Delink##txture"))
-				 {
-					 _ps_txt = nullptr;
-				 }
-			 }
-			 else
-			 {
-				 ImGui::InputText("Attached image:", _pt._attached_txt, FILE_NAME_LEN);
-				 if (ImGui::Button("Import##texture"))
-				 {
-					 auto itxt = g_mtexture_list.find(_pt._attached_txt);
-					 if (itxt != g_mtexture_list.end())
-					 {
-						 _ps_txt = itxt->second;
-					 }
-				 }
-			 }
-		 });
+		reg_property_handle(&_pt, 0, [this](void* member_address)
+		{
+			if (_ps_prm)
+			{
+				ImGui::Text("Attached primitive:%s", _pt._attached_obj);
+				ImGui::SameLine();
+				if (ImGui::Button("Delink##primitive"))
+				{
+					_ps_prm = nullptr;
+				}
+			}
+			else
+			{
+			ImGui::InputText("Attached primitive:", _pt._attached_obj, FILE_NAME_LEN); 
+			if (ImGui::Button("Import"))
+			{
+				auto itxt = g_primitive_list.find(_pt._attached_obj);
+				if (itxt != g_primitive_list.end())
+				{
+					_ps_prm = itxt->second;
+				}
+			}
+			}
+		});
+		reg_property_handle(&_pt, 1, [this](void* member_address)
+		{
+			if (_ps_txt)
+			{
+				ImGui::Text("Attached image:%s", _pt._attached_txt);
+				ImGui::SameLine();
+				if (ImGui::Button("Delink##txture"))
+				{
+					_ps_txt = nullptr;
+				}
+			}
+			else
+			{
+				ImGui::InputText("Attached image:", _pt._attached_txt, FILE_NAME_LEN);
+				if (ImGui::Button("Import##texture"))
+				{
+					auto itxt = g_mtexture_list.find(_pt._attached_txt);
+					if (itxt != g_mtexture_list.end())
+					{
+						_ps_txt = itxt->second;
+					}
+				}
+			}
+		});
+		reg_property_handle(&_pt, 2, [this](void* member_address) {
+            ImGui::Combo("Draw mode:", &_pt._draw_mode, draw_mode,en_gl_count);
+		});
 #endif
      }
 
@@ -129,7 +132,9 @@ namespace auto_future
 		 float w, h;
 		 pscene->get_size(w, h);
 		 float aspect = w / h;
-		 glm::mat4 proj = glm::perspective(glm::radians(pscene->get_fovy()), aspect, pscene->get_near(), pscene->get_far());
+         float near_value = _pt._near > 0.f ? _pt._near : pscene->get_near();
+         float far_value = _pt._far > 0.f ? _pt._far : pscene->get_far();
+         glm::mat4 proj = glm::perspective(glm::radians(pscene->get_fovy()), aspect,near_value, far_value);
 		 _ptxt_node_sd->uniform("projection", glm::value_ptr(proj));
 		// auto& light_position = pscene->get_light_position();
 		// _ptxt_node_sd->uniform("light_position", (float*)&light_position);
@@ -148,11 +153,21 @@ namespace auto_future
 		 _ptxt_node_sd->uniform("texture_diffuse", 0);
 
 		 glBindVertexArray(_ps_prm->_vao);
+		 static GLuint draw_model[en_gl_count] = {
+			 GL_POINTS,       
+			 GL_LINES,     
+			 GL_LINE_LOOP,
+			 GL_LINE_STRIP,   
+			 GL_TRIANGLES, 
+			 GL_TRIANGLE_STRIP,
+			 GL_TRIANGLE_FAN,
+		 };		
+		 GLuint dml = draw_model[_pt._draw_mode];
 		 if (0 == _ps_prm->_ele_buf_len){
-			 glDrawArrays(GL_TRIANGLES, 0, _ps_prm->_vertex_buf_len);
+			 glDrawArrays(dml, 0, _ps_prm->_vertex_buf_len);
 		 }
 		 else {
-			 glDrawElements(GL_TRIANGLES, _ps_prm->_ele_buf_len, GL_UNSIGNED_INT, 0);
+			 glDrawElements(dml, _ps_prm->_ele_buf_len, GL_UNSIGNED_INT, 0);
 		 }
 	 }
 }

@@ -11,7 +11,11 @@ namespace auto_future
      {
           DEF_STRUCT_WITH_INIT( intl_pt, _pt,
 			  (char, _attached_obj[FILE_NAME_LEN]),
-			   (char, _attached_txt[FILE_NAME_LEN]))
+			  (char, _attached_txt[FILE_NAME_LEN]), 
+			  (int, _draw_mode,{en_gl_triangles}),
+              (float, _far, {-1.f}), 
+			  (float, _near, {-1.f})
+			  )
 		  static ps_shader _ptxt_node_sd;
 		  ps_primrive_object _ps_prm = { nullptr };
 		  ps_af_texture _ps_txt = { nullptr };

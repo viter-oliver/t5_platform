@@ -416,7 +416,7 @@ GLFWbool _glfwInitEGL(void)
         _glfwTerminateEGL();
         return GLFW_FALSE;
     }
-    _glfw.egl.display = eglGetDisplay(_GLFW_EGL_NATIVE_DISPLAY);
+    _glfw.egl.display = eglGetDisplay(0);//_GLFW_EGL_NATIVE_DISPLAY);
     printf("native display=%d\n",_glfw.egl.display);
     if (_glfw.egl.display == EGL_NO_DISPLAY)
     {

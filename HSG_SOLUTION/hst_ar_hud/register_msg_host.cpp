@@ -15,18 +15,21 @@ using namespace msg_utility;
 using namespace auto_future;
 using namespace std;
 extern void refresh_hsg();
-#define HUD_DEBUG
+//#define HUD_DEBUG
 namespace hud {
     ft_light_scene* pprojector;
     ft_4_time_curve_3d* pleft_lane;
     ft_4_time_curve_3d* pright_lane;
     ft_4_time_wall_3d* pleft_lane_wall;
     ft_4_time_wall_3d* pright_lane_wall;
+    ft_trans* pleft_change_lane;
+    ft_trans* pright_change_lane;
 
     ft_trans* pmain_tar;
     ft_trans* ptar0;
     ft_trans* ptar1;
     ft_trans* ptar2;
+
 
     float lc0=0.f,lc1=0.f,lc2=0.f,lc3=0.f;
     float rc0=0.f,rc1=0.f,rc2=0.f,rc3=0.f;
@@ -80,6 +83,8 @@ namespace hud {
         pright_lane=(ft_4_time_curve_3d*) get_aliase_ui_control("show_right_lane");
         pleft_lane_wall=(ft_4_time_wall_3d*) get_aliase_ui_control("show_left_lane_wall");
         pright_lane_wall=(ft_4_time_wall_3d*) get_aliase_ui_control("show_right_lane_wall");
+        pleft_change_lane=(ft_trans*)get_aliase_ui_control("show_left_change_lane");
+        pright_change_lane=(ft_trans*)get_aliase_ui_control("show_right_change_lane");       
         pmain_tar=(ft_trans*)get_aliase_ui_control("show_main_tar");
         main_tar.phost=pmain_tar;
         ptar0=(ft_trans*)get_aliase_ui_control("show_tar0");
@@ -409,12 +414,22 @@ void register_msg_host(msg_utility::msg_host& mh){
     });
     reg_trans_handle("lane_changing",[&](int from,int to){
         if(from==1&&to==2){
-            play_tran_playlist("flash_left_lane_wall",0);
+            play_tran_playlist("flash_right_lane_wall",0);
         }
     });
-    reg_trans_handle("flash_left_lane_wall",[&](int from,int to){
-        if(from==0&&to==3){
+    reg_trans_handle("flash_right_lane_wall",[&](int from,int to){
+        if(from==2&&to==1){
+            play_tran("right_change_lane",0,1);
+        }
+    });
+    reg_trans_handle("right_change_lane",[&](int from,int to){
+        static int icnt=0;
+        if(icnt==3){
             play_tran_playlist("lane_changing",0);
+            icnt=0;
+        } else{
+            play_tran("right_change_lane",0,1);
+            icnt++;
         }
     });
     play_tran_playlist("lane_changing",0);

@@ -22,8 +22,8 @@ afg_engine::afg_engine(int argc, char **argv)
 	_win_width = 1920;
 	_win_height = 720;
 
-	_wposx = 180.f;
-	_wposy = 0.f;
+	_wposx = 0.f;
+	_wposy = 180.f;
 }
 void afg_engine::resLoaded()
 {

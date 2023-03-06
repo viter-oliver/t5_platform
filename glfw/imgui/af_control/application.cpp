@@ -31,7 +31,50 @@ static void error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Error %d: %s\n", error, description);
 }
-
+void APIENTRY glDebugOutput(GLenum source, 
+                            GLenum type, 
+                            GLuint id, 
+                            GLenum severity, 
+                            size_t length, 
+                            const char *message, 
+                            const void *userParam)
+{
+    if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; // ignore these non-significant error codes
+ 
+    printf("---------------\n");
+    printf("Debug message (%d:%s)",id,message);
+ 
+    switch (source)
+    {
+        case GL_DEBUG_SOURCE_API:             printf("Source: API"); break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   printf("Source: Window System"); break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: printf("Source: Shader Compiler"); break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     printf("Source: Third Party"); break;
+        case GL_DEBUG_SOURCE_APPLICATION:     printf("Source: Application"); break;
+        case GL_DEBUG_SOURCE_OTHER:           printf("Source: Other"); break;
+    } printf("\n");
+ 
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               printf("Type: Error\n"); break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: printf("Type: Deprecated Behaviour\n"); break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  printf("Type: Undefined Behaviour\n"); break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         printf("Type: Portability\n"); break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         printf("Type: Performance\n"); break;
+        case GL_DEBUG_TYPE_MARKER:              printf("Type: Marker\n"); break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          printf("Type: Push Group\n"); break;
+        case GL_DEBUG_TYPE_POP_GROUP:           printf("Type: Pop Group\n"); break;
+        case GL_DEBUG_TYPE_OTHER:               printf("Type: Other\n"); break;
+    };
+    
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         printf("Severity: high\n"); break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       printf("Severity: medium\n"); break;
+        case GL_DEBUG_SEVERITY_LOW:          printf("Severity: low\n"); break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: printf("Severity: notification\n"); break;
+    };
+}
 namespace auto_future
 {
 	application::application(int argc, char **argv)
@@ -85,6 +128,7 @@ namespace auto_future
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT,GL_TRUE);
 		glfwWindowHint(GLFW_SAMPLES,4);
+		//glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE); 
 #if __APPLE__
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -111,6 +155,12 @@ namespace auto_future
         //glfwGetMonitor_by_id(monitor_id)
 		_window = glfwCreateWindow(_screen_width, _screen_height, "Graphics app", NULL, NULL);
         glfwSetWindowPos(_window,_screen_posx,0);
+		 
+		 
+		//glEnable(GL_DEBUG_OUTPUT);
+        //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // makes sure errors are displayed synchronously
+        //glDebugMessageCallbackKHR(glDebugOutput, nullptr);
+        //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
 		//glfwSetWindowPos(_window, -_screen_posx,_screen_posy);
 		glfwMakeContextCurrent(_window);

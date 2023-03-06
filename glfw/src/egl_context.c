@@ -508,6 +508,18 @@ int choose_format(EGLDisplay egl_disp, EGLConfig egl_conf)
 	}
 }
 #endif
+#if 1
+
+static void on_gl_error(GLenum source,GLenum type, uint id, GLenum serverity,
+size_t length,const char* message,void* userParam){
+    printf("glerror:%s\n",message);
+}
+static void enable_debug_callbacks(){
+    //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR,GL_TRUE);
+    glDebugMessageCallbackKHR(on_gl_error,NULL);
+    //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+}
+#endif
 // Create the OpenGL or OpenGL ES context
 //
 GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
@@ -629,6 +641,7 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
     EGLint ctxattr[] =
     {
         EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_FLAGS_KHR,EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR,
         EGL_NONE
     };
     window->context.egl.handle = eglCreateContext(_glfw.egl.display,
@@ -640,7 +653,7 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
                         getEGLErrorString(eglGetError()));
         return GLFW_FALSE;
     }
-
+    //enable_debug_callbacks();
     // Set up attributes for surface creation
 
     if (fbconfig->sRGB)

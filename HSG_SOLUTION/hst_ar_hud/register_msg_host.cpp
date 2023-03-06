@@ -215,7 +215,7 @@ void register_msg_host(msg_utility::msg_host& mh){
             float Addition_Vehicle_A_PosY=pcan->Addition_Vehicle_A_PosY*0.0625f-32.f;
             float Addition_Vehicle_B_PosX=pcan->Addition_Vehicle_B_PosX*0.0625f;
             float Addition_Vehicle_B_PosY=pcan->Addition_Vehicle_B_PosY*0.0625f-32.f;
-            //printf("car id:%d posx=%f,posy=%f\n",pcan->Vehicle_ID,Addition_Vehicle_A_PosX,Addition_Vehicle_A_PosY);
+            printf("car id:%d posx=%f,posy=%f\n",pcan->Vehicle_ID,Addition_Vehicle_A_PosX,Addition_Vehicle_A_PosY);
             //sprintf("car id:%d posx=%f,posy=%f\n",pcan->Vehicle_ID_2,Addition_Vehicle_B_PosX,Addition_Vehicle_B_PosY);
      
             auto vehicle_id=*pcmd-Vehicle_frame_b0;

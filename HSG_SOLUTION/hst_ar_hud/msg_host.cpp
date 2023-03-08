@@ -41,7 +41,10 @@ namespace msg_utility{
             printf("too fast.slow down please!!!!\n");
             int rid=_rear_id,fid=_front_id;
             printf("nid=%d _rear_id=%d _front_id=%d\n",nid,rid,fid);
-            this_thread::sleep_for(chrono::milliseconds(50));
+            //this_thread::sleep_for(chrono::milliseconds(50));
+            std::unique_lock<std::mutex> lock(_lock);
+            _command_full.wait(lock,[this]{
+                return _rear_id!=_front_id;});
         }
         _front_id=nid;
         debug_cnt++;
@@ -66,6 +69,7 @@ namespace msg_utility{
                 need_refresh_cnt++;
             }
         }
+        _command_full.notify_one();
         int rid=_rear_id;
        // printf("execute cnt=%d rid0=%d _rear_id=%d\n",execute_cnt,rid0,rid);
         return need_refresh_cnt;

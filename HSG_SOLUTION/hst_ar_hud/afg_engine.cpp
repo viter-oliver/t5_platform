@@ -1,7 +1,11 @@
 #include <thread>
 #include "afg_engine.h"
 #include "main.h"
+#ifndef _WIN32
 #include "uart.h"
+#else
+#include "scomm.h"
+#endif
 #include "af_timer.h"
 #include "af_bind.h"
 #include "msg_host.h"
@@ -62,6 +66,16 @@ void afg_engine::resLoaded()
             u8 back_value[valid_cmd_len];
             u8 back_len={0};//<valid_cmd_len;
         }cmd_back;
+#ifdef _WIN32
+        scomm seril_port;
+        DWORD EventMask = EV_RXCHAR;
+        COMSTAT ComStat;
+        DWORD dwErrorFlags;
+        BOOL bReadState = FALSE;
+        DWORD n;
+        auto hcomm = seril_port.open(2, 57600);
+        if(hcomm!= INVALID_HANDLE_VALUE){
+#else
         int uart_fd=openport("/dev/ttyS3");
         if(uart_fd>0){
             setport(uart_fd,57600,8,1,'n');
@@ -69,7 +83,35 @@ void afg_engine::resLoaded()
             while (true){
                 wait_fd_read_eable(uart_fd);
                 int n=read(uart_fd,read_buff,read_buff_len);
+#endif
+            while (true){
                 //printf("got %d bytes\n",n);
+                if (WaitCommEvent(hcomm, &EventMask, NULL) && (EventMask & EV_RXCHAR))
+                {
+                    n = 0;
+                    ClearCommError(hcomm, &dwErrorFlags, &ComStat);
+                    if (ComStat.cbInQue > 0)
+                    {
+                        bReadState = ::ReadFile(hcomm, read_buff, ComStat.cbInQue, &n, NULL);
+                        if (bReadState && n > 0)
+                        {
+                            /*printf("get frame:");
+
+                            for (int ix = 0; ix < dwBytesRead; ix++)
+                            {
+                            printf("%0x ", pdata[ix]);
+                            }
+                            printf("\n");*/
+                        }
+                        else
+                            continue;
+                    }
+                }
+                else
+                {
+                    Sleep(50);
+                    continue;
+                }
                 #if 1
                 auto st_len=valid_cmd_len-cmd_back.back_len;
                 if(n>=st_len){

@@ -7,6 +7,8 @@
 #include <functional>
 #include <map>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 namespace msg_utility{
     int next_id(int cur_id,int id_range,int steps=1);
     using s8 = char;
@@ -26,6 +28,8 @@ namespace msg_utility{
         batch_cmd_handle _batch_cmd_handle;
         std::atomic_int _rear_id{0},_front_id{0};
         u8 _cmd_queque[que_length][cmd_length];
+        std::mutex _lock;
+        std::condition_variable _command_full;
     public:
         bool register_msg_handle(u16 msg,msg_handle mhandle){
             _dic_msg_handle[msg]=mhandle;

@@ -135,26 +135,32 @@ void reg_debug(){
     fifo_debuger::attach_var_handle("view_x",[](char* pcmd_buff )->bool{
         float view_x=atof(pcmd_buff);
         hud::pprojector->get_view_pos()->x=view_x;
+        return true;
     });
     fifo_debuger::attach_var_handle("view_y",[](char* pcmd_buff )->bool{
         float view_y=atof(pcmd_buff);
         hud::pprojector->get_view_pos()->y=view_y;
+        return true;
     });
     fifo_debuger::attach_var_handle("view_z",[](char* pcmd_buff )->bool{
         float view_z=atof(pcmd_buff);
         hud::pprojector->get_view_pos()->z=view_z;
+        return true;
     });
     fifo_debuger::attach_var_handle("center_x",[](char* pcmd_buff )->bool{
         float center_x=atof(pcmd_buff);
         hud::pprojector->get_center_of_prj()->x=center_x;
+        return true;
     });
     fifo_debuger::attach_var_handle("center_y",[](char* pcmd_buff )->bool{
         float center_y=atof(pcmd_buff);
         hud::pprojector->get_center_of_prj()->y=center_y;
+        return true;
     });
     fifo_debuger::attach_var_handle("center_z",[](char* pcmd_buff )->bool{
         float center_z=atof(pcmd_buff);
         hud::pprojector->get_center_of_prj()->z=center_z;
+        return true;
     });
     fifo_debuger::attach_var_handle("adas_x",[](char* pcmd_buff )->bool{
         float adas_x=atof(pcmd_buff);
@@ -167,6 +173,7 @@ void reg_debug(){
         hud::tar0.recal();
         hud::tar1.recal();
         hud::tar2.recal();
+        return true;
     });
     fifo_debuger::attach_var_handle("adas_y",[](char* pcmd_buff )->bool{
         float adas_y=atof(pcmd_buff);
@@ -179,6 +186,7 @@ void reg_debug(){
         hud::tar0.recal();
         hud::tar1.recal();
         hud::tar2.recal();
+        return true;
     });
     fifo_debuger::attach_var_handle("adas_z",[](char* pcmd_buff )->bool{
         float adas_z=atof(pcmd_buff);
@@ -191,6 +199,7 @@ void reg_debug(){
         hud::tar0.recal();
         hud::tar1.recal();
         hud::tar2.recal();
+        return true;
     });
 }
 

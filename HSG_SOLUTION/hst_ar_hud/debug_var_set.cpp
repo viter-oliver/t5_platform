@@ -10,13 +10,13 @@
 #include <sys/types.h>
 #include <thread>
 #ifndef _WIN32
-#include <unistd.h>
 #include "uart.h"
+#include <unistd.h>
 #else
 #include <windows.h>
 #endif
 namespace fifo_debuger {
-using namespace std;  
+using namespace std;
 using mp_var_set = map<string, handle_var_set>;
 mp_var_set _mp_var_set;
 const char *fifo_path = "/media/fifo_hst";
@@ -29,6 +29,40 @@ int fd_fifo = 0;
 handle_var_set general_handle;
 
 void init_var_set_fifo() {
+#ifdef WIN32
+  thread th_fifo([&]() {
+    HANDLE hPipe =
+        CreateNamedPipe(TEXT("\\\\.\\Pipe\\mypipe"), PIPE_ACCESS_INBOUND,
+                        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                        PIPE_UNLIMITED_INSTANCES, 0, 0, NMPWAIT_NOWAIT, NULL);
+
+    if (INVALID_HANDLE_VALUE == hPipe) {
+      printf("Create Pipe Error(%d)\n", GetLastError());
+    } else {
+      printf("Waiting For Client Connection...\n");
+
+      DWORD rlen = 0;
+      while (true) {
+        if (ConnectNamedPipe(hPipe, NULL) != NULL) {
+          if (ReadFile(hPipe, buff_queue[_front_id], FF_BUFF_LEN, &rlen,
+                       NULL) == false) {
+            printf("Read data from client fault\n");
+            // break;
+          } else {
+            buff_queue[_front_id][rlen - 2] = '\0';
+            printf("recieve cmd:%s\n", buff_queue[_front_id]);
+            unsigned int front_next_id = _front_id + 1;
+            front_next_id %= queque_len;
+            _front_id = front_next_id;
+          }
+          DisconnectNamedPipe(hPipe);
+        }
+      }
+      CloseHandle(hPipe);
+    }
+  });
+  th_fifo.detach();
+#else
   int ret = -1;
   if (access(fifo_path, F_OK)) {
     ret = mkfifo(fifo_path, 0666);
@@ -38,8 +72,8 @@ void init_var_set_fifo() {
   } else {
     ret = 1;
   }
-  for(int ix=0;ix<queque_len;++ix){
-    buff_queue[ix][0]='\0';
+  for (int ix = 0; ix < queque_len; ++ix) {
+    buff_queue[ix][0] = '\0';
   }
   if (ret != -1) {
     thread th_fifo([&]() {
@@ -54,7 +88,7 @@ void init_var_set_fifo() {
         int n = read(fd_fifo, buff_queue[_front_id], FF_BUFF_LEN);
         if (n > 0) {
           buff_queue[_front_id][n - 1] = '\0';
-          printf("recieve cmd:%s\n",buff_queue[_front_id]);
+          printf("recieve cmd:%s\n", buff_queue[_front_id]);
           unsigned int front_next_id = _front_id + 1;
           front_next_id %= queque_len;
           _front_id = front_next_id;
@@ -64,6 +98,7 @@ void init_var_set_fifo() {
     });
     th_fifo.detach();
   }
+#endif
 }
 
 void attach_var_handle(std::string var_name, handle_var_set hdl) {
@@ -88,7 +123,7 @@ int cmd_update() {
       };
       for (uit cur_id = next_id(_rear_id); cur_id != _rear_id;
            cur_id = next_id(cur_id)) {
-        if(strlen(buff_queue[cur_id])>0)
+        if (strlen(buff_queue[cur_id]) > 0)
           printf("%s\n", buff_queue[cur_id]);
       }
     } else {
@@ -102,11 +137,11 @@ int cmd_update() {
             refresh_count++;
           }
         } else {
-          if(general_handle){
+          if (general_handle) {
             general_handle(cur_buff);
           }
         }
-      } 
+      }
     }
   }
   return refresh_count;

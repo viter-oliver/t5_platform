@@ -8,7 +8,6 @@
 #include "adas_can_def.h"
 #include "register_msg_host.h"
 #include "debug_var_set.h"
-extern void refresh_hsg();
 using namespace auto_future;
 using namespace std;
 using namespace msg_utility;

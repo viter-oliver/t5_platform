@@ -5,14 +5,14 @@
 #include "af_primitive_object.h"
 namespace auto_future
 {
-     class ft_hud_obj_3d :
+	class AFG_EXPORT ft_hud_obj_3d :
           public ft_base
      {
           DEF_STRUCT_WITH_INIT( pty_page, _pt_tb,
                                 ( char, _attached_image[ FILE_NAME_LEN ] ),
-                                ( float, _tanslation_x ),
-                                ( float, _tanslation_y ),
-                                ( float, _tanslation_z ) )
+                                ( float, _tanslation_x, {0.f} ),
+                                ( float, _tanslation_y, {0.f} ),
+                                ( float, _tanslation_z, {0.f} ) )
           static ps_shader _phud_sd;
           static ps_primrive_object _ps_prm; 
           ps_af_texture _pat_image;

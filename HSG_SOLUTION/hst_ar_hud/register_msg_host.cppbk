@@ -13,7 +13,6 @@ car0_show
 using namespace msg_utility;
 using namespace auto_future;
 using namespace std;
-extern void refresh_hsg();
 #define HUD_DEBUG
 namespace hud {
     ft_light_scene* pprojector;

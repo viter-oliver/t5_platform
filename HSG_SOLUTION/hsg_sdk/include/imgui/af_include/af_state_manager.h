@@ -65,12 +65,12 @@ enum trans_play_state
 typedef	function<void(int from, int to)> trans_finish_handle;
 struct af_state_manager
 {
-	vprop_pos _prop_list;//ÊôÐÔÁÐ±í¡ª¡ª¸Ã×´Ì¬»ú°üº¬µÄËùÓÐÊôÐÔ
-	vvprop_block _prop_value_list;//ÊôÐÔÖµÁÐ±í¡ª¡ª
+	vprop_pos _prop_list;//ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	vvprop_block _prop_value_list;//ï¿½ï¿½ï¿½ï¿½Öµï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½
 	state_transition _any_to_any;
 	trans_finish_handle _trans_finish;
      sp_st_trans _pcur_tran { nullptr };
-	mp_trans _mtrans;//×´Ì¬ÇÐ»»
+	mp_trans _mtrans;//×´Ì¬ï¿½Ð»ï¿½
 	unsigned char _state_idx{ 0 };
 	moving_state _mstate{ en_state_pause };
      trans_play_state _play_state {en_play_stop};
@@ -95,7 +95,7 @@ AFG_EXPORT void keep_state_trans_on();
 AFG_EXPORT bool save_property_to_trans_state( string trans_name,
                                               prop_ele_position& prp_pos,
                                               int base_id );
-AFG_EXPORT bool cancel_play_tran(string stm_name);
+AFG_EXPORT bool cancel_play_tran( string stm_name );
 
 template<class T> struct paire_value
 {
@@ -223,4 +223,3 @@ template<class T> bool set_trans_sequential_state_list_delta(string trans_name,
      }
      return true;
 }
-

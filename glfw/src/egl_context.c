@@ -641,7 +641,7 @@ GLFWbool _glfwCreateContextEGL(_GLFWwindow* window,
     EGLint ctxattr[] =
     {
         EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_CONTEXT_FLAGS_KHR,EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR,
+        //EGL_CONTEXT_FLAGS_KHR,EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR,
         EGL_NONE
     };
     window->context.egl.handle = eglCreateContext(_glfw.egl.display,

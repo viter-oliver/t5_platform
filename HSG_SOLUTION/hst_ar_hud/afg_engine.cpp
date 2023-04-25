@@ -75,43 +75,38 @@ void afg_engine::resLoaded()
         DWORD n;
         auto hcomm = seril_port.open(2, 57600);
         if(hcomm!= INVALID_HANDLE_VALUE){
-#else
-        int uart_fd=openport("/dev/ttyS3");
-        if(uart_fd>0){
-            setport(uart_fd,57600,8,1,'n');
-            printf("enter loop of receive uart message!\n");
-            while (true){
-                wait_fd_read_eable(uart_fd);
-                int n=read(uart_fd,read_buff,read_buff_len);
-#endif
-            while (true){
-                //printf("got %d bytes\n",n);
-                if (WaitCommEvent(hcomm, &EventMask, NULL) && (EventMask & EV_RXCHAR))
-                {
-                    n = 0;
-                    ClearCommError(hcomm, &dwErrorFlags, &ComStat);
-                    if (ComStat.cbInQue > 0)
-                    {
-                        bReadState = ::ReadFile(hcomm, read_buff, ComStat.cbInQue, &n, NULL);
-                        if (bReadState && n > 0)
-                        {
-                            /*printf("get frame:");
+      while (true) {
+        // printf("got %d bytes\n",n);
+        if (WaitCommEvent(hcomm, &EventMask, NULL) && (EventMask & EV_RXCHAR)) {
+          n = 0;
+          ClearCommError(hcomm, &dwErrorFlags, &ComStat);
+          if (ComStat.cbInQue > 0) {
+            bReadState =
+                ::ReadFile(hcomm, read_buff, ComStat.cbInQue, &n, NULL);
+            if (bReadState && n > 0) {
+              /*printf("get frame:");
 
-                            for (int ix = 0; ix < dwBytesRead; ix++)
-                            {
-                            printf("%0x ", pdata[ix]);
-                            }
-                            printf("\n");*/
-                        }
-                        else
-                            continue;
-                    }
-                }
-                else
-                {
-                    Sleep(50);
-                    continue;
-                }
+              for (int ix = 0; ix < dwBytesRead; ix++)
+              {
+              printf("%0x ", pdata[ix]);
+              }
+              printf("\n");*/
+            } else
+              continue;
+          }
+        } else {
+          Sleep(50);
+          continue;
+        }
+#else
+    int uart_fd = openport("/dev/ttyS3");
+    if (uart_fd > 0) {
+      setport(uart_fd, 57600, 8, 1, 'n');
+      printf("enter loop of receive uart message!\n");
+      while (true) {
+        wait_fd_read_eable(uart_fd);
+        int n = read(uart_fd, read_buff, read_buff_len);
+#endif
                 #if 1
                 auto st_len=valid_cmd_len-cmd_back.back_len;
                 if(n>=st_len){
@@ -160,42 +155,40 @@ void afg_engine::resLoaded()
                     front_id=leave_len;
                 }
 
-                for (; rear_id!=front_id;) {
-                    static bool picked_valid_data=false;
-                    static u8 valid_data_idx=2;
-                    u8 cur_data=param_buff[rear_id];
-                    auto n_id= next_id(rear_id,param_buff_len);
-                    if (picked_valid_data){
-                        cmd_head.cmd_value[valid_data_idx++]=cur_data;
-                        if (valid_data_idx==valid_cmd_len)
-                        {
-                            valid_data_idx=2;
-                            picked_valid_data=false;
-                            g_msg_host.pick_valid_data(cmd_head.cmd_value,valid_cmd_len);
-                        }
-                    } else {
-                        cmd_head.cmd_value[0]=cur_data;
-                        cmd_head.cmd_value[1]=param_buff[n_id];
-                        if(is_valid(cmd_head.cmd_tag)){
-                            picked_valid_data=true;
-                            n_id= next_id(n_id,param_buff_len);
-                        }
-                    }
-                    rear_id= n_id;
-                }
-                #endif
+        for (; rear_id != front_id;) {
+          static bool picked_valid_data = false;
+          static u8 valid_data_idx = 2;
+          u8 cur_data = param_buff[rear_id];
+          auto n_id = next_id(rear_id, param_buff_len);
+          if (picked_valid_data) {
+            cmd_head.cmd_value[valid_data_idx++] = cur_data;
+            if (valid_data_idx == valid_cmd_len) {
+              valid_data_idx = 2;
+              picked_valid_data = false;
+              g_msg_host.pick_valid_data(cmd_head.cmd_value, valid_cmd_len);
             }
-        } else {
-            printf("fail to open serial port:/dev/ttyS3\n");
+          } else {
+            cmd_head.cmd_value[0] = cur_data;
+            cmd_head.cmd_value[1] = param_buff[n_id];
+            if (is_valid(cmd_head.cmd_tag)) {
+              picked_valid_data = true;
+              n_id = next_id(n_id, param_buff_len);
+            }
+          }
+          rear_id = n_id;
         }
-    });
-    thd_uart_com.detach();
-
+#endif
+      }
+    } else {
+      printf("fail to open serial port:/dev/ttyS3\n");
+    }
+  });
+  thd_uart_com.detach();
+  
 }
-void afg_engine::onUpdate()
-{
-    g_msg_host.execute_cmd();
-    g_timer.execute();
-    fifo_debuger::cmd_update();
+void afg_engine::onUpdate() {
+  g_msg_host.execute_cmd();
+  g_timer.execute();
+  fifo_debuger::cmd_update();
 }
 AFGUI_APP(afg_engine)

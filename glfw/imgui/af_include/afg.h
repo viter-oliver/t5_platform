@@ -32,7 +32,7 @@
 #include "ft_hud_4_time_wall_3d.h"
 #include "ft_hud_object_3d.h"
 #include "ft_hud_piece_3d.h"
-#include "ft_color_node.h"
+//#include "ft_color_node.h"
 #include "ft_color_mesh.h"
 #include "ft_1_texture_node.h"
 #include "ft_1_texture_mesh.h"
